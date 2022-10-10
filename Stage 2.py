@@ -100,17 +100,29 @@ data = [[48644524,"A1 Stone","12/2250"],
 
 import pandas as pd
 import numpy as np
+import scipy.signal as sc
 
 data = np.array(data)
 database = pd.DataFrame(data, columns=['Send_ID','Send_CO','Tran_DA'])
 
 def detect_reccurence(database) :
-    database['Tran_DA'] = pd.to_datetime(database['Tran_DA'], format= '%m/%Y')
-    database = database.to_numpy()[:,[0,2]]
-    database = database[np.lexsort((database[:,1], database[:,0]))]
-    
-    index = 0
-    while index < database.shape()[0] :
+    database = database.to_numpy(dtype = str)
+    hashmap = {database[0][0] : 0}
+    index = 1
+    date_min = database[0][2]
+    date_max = date_min
+
+    """
+    for i in range(1, np.shape(database)[0]) :
+        if database[i][0] not in hashmap :
+            hashmap[database[i][0]] = index
+            index += 1
+    """
+
+    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int)
+    min_year = np.amin(dates[:,1])
+    time = dates[:,0] + ((dates[:,1] % min_year) * 12)
+    print(time)
 
 
 
