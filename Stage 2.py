@@ -99,12 +99,10 @@ data = [[48644524,"A1 Stone","12/2250"],
 [98578956,"Lumian","10/2249"]]
 
 
-from array import array
-from audioop import maxpp
-from re import I
+
 import pandas as pd
 import numpy as np
-import scipy.signal as sc
+
 
 data = np.array(data)
 database = pd.DataFrame(data, columns=['Send_ID','Send_CO','Tran_DA'])
@@ -136,9 +134,10 @@ def detect_reccurenceV1(database) :
     data = np.zeros((index, max_date), dtype= int)
     for i in range(0, np.shape(database)[0]) :
         data[database[i][0]][database[i][1] - 1] = 1
-    print(data)
-    print(np.abs(np.fft.rfft(data[-3])))
-    print(np.fft.fftfreq(max_date))
+
+
+
+
 
 def detect_reccurenceV2(database) :
     database = database.to_numpy(dtype = str)
@@ -149,28 +148,28 @@ def detect_reccurenceV2(database) :
     database_lenght = np.shape(database)[0]
     
     id_to_index = {database[0][0] : 0}
-    index_to_id = {0 : database[0][0]}
+    index_to_id = [database[0][0]]
     database[0][0] = 0
-    nb_of_id = 1
+    nb_of_ids = 1
     max_date = database[0][1]
     for i in range(1, database_lenght) :
         if database[i][1] >= max_date :
             max_date = database[i][1]
         if database[i][0] not in id_to_index :
-            id_to_index[database[i][0]] = nb_of_id
-            index_to_id[nb_of_id] = database[i][0]
-            database[i][0] = nb_of_id
-            nb_of_id += 1
+            id_to_index[database[i][0]] = nb_of_ids
+            index_to_id.append(database[i][0])
+            database[i][0] = nb_of_ids
+            nb_of_ids += 1
         else :
             database[i][0] = id_to_index[database[i][0]]
     
-    data = np.zeros((nb_of_id, max_date), dtype= bool)
+    data = np.zeros((nb_of_ids, max_date), dtype= bool)
     for i in range(0, database_lenght) :
         data[database[i][0]][database[i][1] - 1] = True
 
     cheating_ids = []
 
-    for i in range(0, nb_of_id) :
+    for i in range(0, nb_of_ids) :
         index_1 = 0
         cheating = False
         while index_1 < max_date and not cheating :
@@ -190,7 +189,6 @@ def detect_reccurenceV2(database) :
 
                 if 2 * index_2 - index_1 < max_date and data[i][2 * index_2 - index_1] :
                     cheating_ids.append(index_to_id[i])
-                    #cheating_ids.append(i)
                     cheating = True
                 else :
                     index_2 += 1
@@ -200,4 +198,57 @@ def detect_reccurenceV2(database) :
     return cheating_ids
 
 
+
+def detect_reccurenceV3(database) :
+    database = database.to_numpy(dtype = str)
+    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int)
+    min_year = np.amin(dates[:,1])    
+    database = np.stack((np.asarray(database[:,0], dtype = int), dates[:,0] + (((dates[:,1] % min_year) * 12))), axis = -1)
+
+    database_lenght = np.shape(database)[0]
+    
+    id_to_index = {database[0][0] : 0}
+    index_to_id = [database[0][0]]
+    database[0][0] = 0
+    nb_of_ids = 1
+    max_date = database[0][1]
+    for i in range(1, database_lenght) :
+        if database[i][1] >= max_date :
+            max_date = database[i][1]
+        if database[i][0] not in id_to_index :
+            id_to_index[database[i][0]] = nb_of_ids
+            index_to_id.append(database[i][0])
+            database[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            database[i][0] = id_to_index[database[i][0]]
+    
+    data = np.zeros((nb_of_ids, max_date), dtype= int)
+    for i in range(0, database_lenght) :
+        data[database[i][0]][database[i][1] - 1] = 1
+    
+    sequences = np.fromiter((np.concatenate([[1], np.zeros(i, dtype = int), [1], np.zeros(i, dtype = int), [1]]) for i in range(int((max_date - 3) / 2) + 1)), dtype = np.ndarray, count=int((max_date - 3) / 2) + 1)
+    cheating_ids = []
+    for index in range(nb_of_ids) :
+        for sequence in sequences :
+            if np.isin(3, np.correlate(data[index], sequence)) :
+                cheating_ids.append(index_to_id[index])
+                break
+    
+    return cheating_ids
+
+
+import time
+
+start_time = time.time_ns()
+for i in range(1000) :
+    detect_reccurenceV2(database)
+print("--- %s seconds --- V2" % ((time.time_ns() - start_time) / 10**9 ))
+
+start_time = time.time_ns()
+for i in range(1000) :
+    detect_reccurenceV3(database)
+print("--- %s seconds --- V3" % ((time.time_ns() - start_time) / 10**9 ))
+
 print(detect_reccurenceV2(database))
+print(detect_reccurenceV3(database))
