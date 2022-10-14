@@ -500,3 +500,21 @@ main_database = [[38502761,"LunarTransport",68362850,"Lunestone",33813.87],
 [70898547,"Iphinstone",70898547,"Iphinstone",12666.26]]
 
 [48644524, 96877928, 35673565, 16235167, 98578956, 68362850]
+
+import numpy as np
+import pandas as pd
+
+csv = pd.DataFrame(main_database, columns=['Seller_ID','Seller_CO','Buyer_ID','Buyer_CO','Tran_PR'])
+
+def find_main_fraudster(csv):
+    
+    #main_database = pd.read_csv(csv)
+    
+    # CODE HERE
+    main_database = csv.to_numpy()
+    print(main_database)
+    
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return
