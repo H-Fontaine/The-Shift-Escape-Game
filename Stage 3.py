@@ -519,47 +519,61 @@ def find_main_fraudster(csv):
     #main_database = pd.read_csv(csv)
     
     # CODE HERE
-    main_database = np.asarray(csv.to_numpy()[:,[0,2,4]], dtype = float)
+    main_database = np.asarray(csv.to_numpy()[:,[2,0,4]], dtype = float)
 
     main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
     unique = np.unique(main_database_cleaned[:,:2], axis=0)
     
     sums = np.fromiter((np.sum(np.asarray(main_database_cleaned[:,-1], dtype =float), where=np.all(main_database_cleaned[:,:2] == line, axis = 1)) for line in unique), dtype = float, count = len(unique))
     group_by = np.concatenate((unique, np.resize(sums, (len(sums), 1))), axis =1)
-    
+
     id_to_index = {group_by[0][0] : 0}
     index_to_id = [group_by[0][0]]
+    money_of_index = [group_by[0][2]]
     group_by[0][0] = 0
     nb_of_ids = 1
     for i in range(1, len(group_by)) :
         if group_by[i][0] not in id_to_index :
             id_to_index[group_by[i][0]] = nb_of_ids
             index_to_id.append(group_by[i][0])
+            money_of_index.append(group_by[i][2])
             group_by[i][0] = nb_of_ids
             nb_of_ids += 1
         else :
+            money_of_index[id_to_index[group_by[i][0]]] += group_by[i][2]
             group_by[i][0] = id_to_index[group_by[i][0]]
+
 
     adg_list = [[] for i in range(nb_of_ids)]
     for i in range(len(group_by)) :
         adg_list[int(group_by[i][0])].append(id_to_index[group_by[i][1]])
 
-    
+
     visited = [False] * nb_of_ids
     pile = []
     for i in range(len(visited)) :
         if not visited[i] :
             pile.append(deep_path(i, visited, adg_list, []))
-    print(pile)
-            
 
 
+    connexe_size = 0
+    longest_connext = []
+    for connexe in pile :
+        if len(connexe) >= connexe_size :
+            longest_connext = connexe
+            connexe_size = len(connexe)
 
-    
+    money = -1
+    richest_index = -1
+    for index in longest_connext :
+        if money_of_index[index] >= money :
+            richest_index = index
+            money = money_of_index[index]
+
     #print(unique)
     
     # The function should return the company ID belonging to the company which received 
     # the highest amount of money while being connected to the highest number of companies.
-    return
+    return int(index_to_id[richest_index])
 
 print(find_main_fraudster(csv))
