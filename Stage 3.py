@@ -506,6 +506,14 @@ import pandas as pd
 
 csv = pd.DataFrame(main_database, columns=['Seller_ID','Seller_CO','Buyer_ID','Buyer_CO','Tran_PR'])
 
+def deep_path(summit, visited, adg_list, pile) :
+    visited[summit] = True
+    for i in adg_list[summit] :
+        if not visited[i] :
+            pile = deep_path(i, visited, adg_list, pile)
+    return pile + [summit]
+
+
 def find_main_fraudster(csv):
     
     #main_database = pd.read_csv(csv)
@@ -518,7 +526,35 @@ def find_main_fraudster(csv):
     
     sums = np.fromiter((np.sum(np.asarray(main_database_cleaned[:,-1], dtype =float), where=np.all(main_database_cleaned[:,:2] == line, axis = 1)) for line in unique), dtype = float, count = len(unique))
     group_by = np.concatenate((unique, np.resize(sums, (len(sums), 1))), axis =1)
-    print(group_by)
+    
+    id_to_index = {group_by[0][0] : 0}
+    index_to_id = [group_by[0][0]]
+    group_by[0][0] = 0
+    nb_of_ids = 1
+    for i in range(1, len(group_by)) :
+        if group_by[i][0] not in id_to_index :
+            id_to_index[group_by[i][0]] = nb_of_ids
+            index_to_id.append(group_by[i][0])
+            group_by[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            group_by[i][0] = id_to_index[group_by[i][0]]
+
+    adg_list = [[] for i in range(nb_of_ids)]
+    for i in range(len(group_by)) :
+        adg_list[int(group_by[i][0])].append(id_to_index[group_by[i][1]])
+
+    
+    visited = [False] * nb_of_ids
+    pile = []
+    for i in range(len(visited)) :
+        if not visited[i] :
+            pile.append(deep_path(i, visited, adg_list, []))
+    print(pile)
+            
+
+
+
     
     #print(unique)
     
