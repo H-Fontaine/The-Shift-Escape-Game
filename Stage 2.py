@@ -177,8 +177,7 @@ def detect_reccurenceV2(database) :
 
 
     #Pour chaque ligne (entreprise) on regarde si elle triche en procedant comme suit :
-    #-Pour chacune des entreprise on commence par trouver la premiere date ( correspondant )
-    for i in range(0, nb_of_ids) :
+    for i in range(0, nb_of_ids) : #On itere sur les entreprises
         index_1 = 0 #Index de la première transaction d'une suite de transaction suspecte
         cheating = False
         while index_1 < max_date and not cheating : #Pour chaque suites de transactions possibles 
@@ -192,7 +191,7 @@ def detect_reccurenceV2(database) :
                 while 2 * index_2 - index_1 < max_date and not data[i][index_2] : #On va chercher la deuxième transaction de la suite
                     index_2 += 1
                 
-                if first : #Permet de connetre l'index du début de la prochaine suite de transation suspecte
+                if first : #Permet de connaitre l'index du début de la prochaine suite de transation suspecte
                     next_index = index_2
                     first = False
 
