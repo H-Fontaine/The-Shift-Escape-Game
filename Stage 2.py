@@ -314,18 +314,21 @@ def detect_reccurenceV4(database) :
 import time
 
 start_time = time.time_ns()
-for i in range(10000) :
+for i in range(1000) :
     detect_reccurenceV2(database)
 print("--- %s seconds --- V2" % ((time.time_ns() - start_time) / 10**9 ))
 
 start_time = time.time_ns()
-for i in range(10000) :
+for i in range(1000) :
+    detect_reccurenceV3(database)
+print("--- %s seconds --- V3" % ((time.time_ns() - start_time) / 10**9 ))
+
+start_time = time.time_ns()
+for i in range(1000) :
     detect_reccurenceV4(database)
 print("--- %s seconds --- V4" % ((time.time_ns() - start_time) / 10**9 ))
 
-
-
-
-print(detect_reccurenceV2(database))
-print(detect_reccurenceV3(database))
-print(detect_reccurenceV4(database))
+if detect_reccurenceV2(database) == detect_reccurenceV3(database) == detect_reccurenceV4(database) :
+    print("They all agreed on the response")
+else :
+    print("At least une function didn't send the same result than the others")
