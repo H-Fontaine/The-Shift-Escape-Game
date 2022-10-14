@@ -100,6 +100,7 @@ data = [[48644524,"A1 Stone","12/2250"],
 
 
 
+from operator import index
 import pandas as pd
 import numpy as np
 
@@ -199,6 +200,8 @@ def detect_reccurenceV2(database) :
 
 
 
+
+
 def detect_reccurenceV3(database) :
     database = database.to_numpy(dtype = str)
     dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int)
@@ -240,6 +243,7 @@ def detect_reccurenceV3(database) :
 
 
 
+
 def detect_reccurenceV4(database) :
     database = database.to_numpy(dtype = str)
     dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int)
@@ -264,14 +268,16 @@ def detect_reccurenceV4(database) :
         else :
             database[i][0] = id_to_index[database[i][0]]
     
+    index_to_id = np.array(index_to_id)
+
     data = np.zeros((nb_of_ids, max_date), dtype= int)
     for i in range(0, database_lenght) :
         data[database[i][0]][database[i][1] - 1] = 1
 
-     
-    data = data[[not np.all([np.correlate(data[i], data[i], "full")[:len(data[i]) - 1] <= 1]) for i in range(len(data))]]
-    
-    
+    preselect = np.fromiter((not np.all([np.correlate(data[i], data[i], "full")[:max_date - 1] <= 1]) for i in range(nb_of_ids)), dtype=bool, count = nb_of_ids)
+    data = data[preselect]
+    index_to_id = index_to_id[preselect]
+
     cheating_ids = []
 
     for i in range(0, len(data)) :
@@ -303,21 +309,23 @@ def detect_reccurenceV4(database) :
     return cheating_ids
 
 
-"""
+
+
 import time
 
 start_time = time.time_ns()
-for i in range(1000) :
+for i in range(10000) :
     detect_reccurenceV2(database)
 print("--- %s seconds --- V2" % ((time.time_ns() - start_time) / 10**9 ))
 
 start_time = time.time_ns()
-for i in range(1000) :
-    detect_reccurenceV3(database)
-print("--- %s seconds --- V3" % ((time.time_ns() - start_time) / 10**9 ))
+for i in range(10000) :
+    detect_reccurenceV4(database)
+print("--- %s seconds --- V4" % ((time.time_ns() - start_time) / 10**9 ))
+
+
+
 
 print(detect_reccurenceV2(database))
 print(detect_reccurenceV3(database))
-"""
-print(detect_reccurenceV2(database))
 print(detect_reccurenceV4(database))
