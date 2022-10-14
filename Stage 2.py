@@ -176,34 +176,34 @@ def detect_reccurenceV2(database) :
     cheating_ids = []
 
 
-    #Pour chaque ligne (entreprise)
-    for i in range(0, nb_of_ids) : 
-        index_1 = 0
+    #Pour chaque ligne (entreprise) on regarde si elle triche en procedant comme suit :
+    for i in range(0, nb_of_ids) :
+        index_1 = 0 #Index de la premiere transaction d'une suite de transaction suspecte
         cheating = False
-        while index_1 < max_date and not cheating :
-            while index_1 < max_date and not data[i][index_1] :
+        while index_1 < max_date and not cheating : #Pour chaque suite de transaction possible 
+            while index_1 < max_date and not data[i][index_1] : #On récupère l'index de la premiere transaction de la suite
                 index_1 += 1
             
             next_index = index_1 + 1
             index_2 = next_index
-            first = True
-            while 2 * index_2 - index_1 < max_date and not cheating :
-                while 2 * index_2 - index_1 < max_date and not data[i][index_2] :
+            first = True #Permet de connetre l'index du début de la prochaine suite de transation suspecte
+            while 2 * index_2 - index_1 < max_date and not cheating : #Tant qu'il existe une suite de transaction suspecte 
+                while 2 * index_2 - index_1 < max_date and not data[i][index_2] : #On va chercher la deuxième transaction de la suite
                     index_2 += 1
                 
-                if first :
+                if first : #Permet de connetre l'index du début de la prochaine suite de transation suspecte
                     next_index = index_2
                     first = False
 
-                if 2 * index_2 - index_1 < max_date and data[i][2 * index_2 - index_1] :
+                if 2 * index_2 - index_1 < max_date and data[i][2 * index_2 - index_1] : #On regarde si la suite suspecte est une suite tricheuse ou non
                     cheating_ids.append(index_to_id[i])
                     cheating = True
                 else :
-                    index_2 += 1
+                    index_2 += 1 #Si on on crée la suite suspecte suivante pour la même première transaction
             
             index_1 = next_index 
 
-    return cheating_ids
+    return cheating_ids 
 
 
 
