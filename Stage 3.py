@@ -511,10 +511,19 @@ def find_main_fraudster(csv):
     #main_database = pd.read_csv(csv)
     
     # CODE HERE
-    main_database = csv.to_numpy()
-    print(main_database)
+    main_database = np.asarray(csv.to_numpy()[:,[0,2,4]], dtype = float)
+
+    main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
+    unique = np.unique(main_database_cleaned[:,:2], axis=0)
     
+    sums = np.fromiter((np.sum(np.asarray(main_database_cleaned[:,-1], dtype =float), where=np.all(main_database_cleaned[:,:2] == line, axis = 1)) for line in unique), dtype = float, count = len(unique))
+    group_by = np.concatenate((unique, np.resize(sums, (len(sums), 1))), axis =1)
+    print(group_by)
+    
+    #print(unique)
     
     # The function should return the company ID belonging to the company which received 
     # the highest amount of money while being connected to the highest number of companies.
     return
+
+print(find_main_fraudster(csv))
