@@ -164,7 +164,7 @@ def detect_reccurenceV2(database) :
             database[i][0] = nb_of_ids
             nb_of_ids += 1
         else :
-            database[i][0] = id_to_index[database[i][0]]
+            database[i][0] = id_to_index[database[i][0]] #ugfuygfutykjkj
     
 
 
