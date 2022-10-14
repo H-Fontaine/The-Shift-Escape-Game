@@ -142,8 +142,8 @@ def detect_reccurenceV1(database) :
 
 def detect_reccurenceV2(database) :
     database = database.to_numpy(dtype = str)
-    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int) ##on parse les dates
-    min_year = np.amin(dates[:,1])    
+    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int) #on transforme la colonne date du format str "mm/aaaaa" vers int[] [mm,aaaaa]
+    min_year = np.amin(dates[:,1]) #recupération de la date minimum    
     database = np.stack((np.asarray(database[:,0], dtype = int), dates[:,0] + (((dates[:,1] % min_year) * 12))), axis = -1) ##On prend comme origine des temps janvier de l'année la plus petite et comme unité le mois
 
     database_lenght = len(database)
@@ -164,7 +164,7 @@ def detect_reccurenceV2(database) :
             database[i][0] = nb_of_ids
             nb_of_ids += 1
         else :
-            database[i][0] = id_to_index[database[i][0]] #ugfuygfutykjkj
+            database[i][0] = id_to_index[database[i][0]] 
     
 
 
@@ -177,7 +177,7 @@ def detect_reccurenceV2(database) :
 
 
     #Pour chaque ligne (entreprise)
-    for i in range(0, nb_of_ids) :
+    for i in range(0, nb_of_ids) : 
         index_1 = 0
         cheating = False
         while index_1 < max_date and not cheating :
