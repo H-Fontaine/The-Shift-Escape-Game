@@ -142,14 +142,16 @@ def detect_reccurenceV1(database) :
 
 def detect_reccurenceV2(database) :
     database = database.to_numpy(dtype = str)
-    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int)
+    dates = np.asarray(np.char.rpartition(database[:,2], sep = '/')[:,[0,2]], dtype=int) ##on parse les dates
     min_year = np.amin(dates[:,1])    
-    database = np.stack((np.asarray(database[:,0], dtype = int), dates[:,0] + (((dates[:,1] % min_year) * 12))), axis = -1)
+    database = np.stack((np.asarray(database[:,0], dtype = int), dates[:,0] + (((dates[:,1] % min_year) * 12))), axis = -1) ##On prend comme origine des temps janvier de l'année la plus petite et comme unité le mois
 
-    database_lenght = np.shape(database)[0]
+    database_lenght = len(database)
     
-    id_to_index = {database[0][0] : 0}
-    index_to_id = [database[0][0]]
+
+    #Le but de cette partie du code est de recupérer la date maximale et simplifier les id vers des int de petite taille
+    id_to_index = {database[0][0] : 0} #Hashmap pour savoir facilement si on a déjà vu cette id
+    index_to_id = [database[0][0]] #La reciproque de la hashmap
     database[0][0] = 0
     nb_of_ids = 1
     max_date = database[0][1]
@@ -164,12 +166,17 @@ def detect_reccurenceV2(database) :
         else :
             database[i][0] = id_to_index[database[i][0]]
     
+
+
+    #Création d'un tableau dans lequel chaque ligne représente les opérations faite par une entreprise : True = opération réalisé ce mois, False = pas d'opération réalisé ce mois
     data = np.zeros((nb_of_ids, max_date), dtype= bool)
     for i in range(0, database_lenght) :
         data[database[i][0]][database[i][1] - 1] = True
 
     cheating_ids = []
 
+
+    #Pour chaque ligne (entreprise)
     for i in range(0, nb_of_ids) :
         index_1 = 0
         cheating = False
@@ -307,7 +314,6 @@ def detect_reccurenceV4(database) :
             index_1 = next_index
 
     return cheating_ids
-
 
 
 
