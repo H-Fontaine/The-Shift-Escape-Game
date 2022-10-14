@@ -201,7 +201,7 @@ def detect_reccurenceV2(database) :
                 else :
                     index_2 += 1
             
-            index_1 = next_index
+            index_1 = next_index #sqfsqfqsdf
 
     return cheating_ids
 
