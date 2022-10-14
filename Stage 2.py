@@ -199,7 +199,7 @@ def detect_reccurenceV2(database) :
                     cheating_ids.append(index_to_id[i])
                     cheating = True
                 else :
-                    index_2 += 1 #Si on on crée la suite suspecte suivante pour la même première transaction
+                    index_2 += 1 #Si oui on crée la suite suspecte suivante pour la même première transaction
             
             index_1 = next_index 
 
@@ -237,14 +237,17 @@ def detect_reccurenceV3(database) :
     for i in range(0, database_lenght) :
         data[database[i][0]][database[i][1] - 1] = 1
     
-    sequences = np.fromiter((np.concatenate([[1], np.zeros(i, dtype = int), [1], np.zeros(i, dtype = int), [1]]) for i in range(int((max_date - 3) / 2) + 1)), dtype = np.ndarray, count=int((max_date - 3) / 2) + 1)
+    
     cheating_ids = []
+
+    """
+    sequences = np.fromiter((np.concatenate([[1], np.zeros(i, dtype = int), [1], np.zeros(i, dtype = int), [1]]) for i in range(int((max_date - 3) / 2) + 1)), dtype = np.ndarray, count=int((max_date - 3) / 2) + 1)
     for index in range(nb_of_ids) :
         for sequence in sequences :
             if np.isin(3, np.correlate(data[index], sequence)) :
                 cheating_ids.append(index_to_id[index])
                 break
-    
+    """
     return cheating_ids
 
 
@@ -320,21 +323,23 @@ def detect_reccurenceV4(database) :
 import time
 
 start_time = time.time_ns()
-for i in range(1000) :
+for i in range(0) :
     detect_reccurenceV2(database)
 print("--- %s seconds --- V2" % ((time.time_ns() - start_time) / 10**9 ))
 
 start_time = time.time_ns()
-for i in range(1000) :
+for i in range(0) :
     detect_reccurenceV3(database)
 print("--- %s seconds --- V3" % ((time.time_ns() - start_time) / 10**9 ))
 
 start_time = time.time_ns()
-for i in range(1000) :
+for i in range(0) :
     detect_reccurenceV4(database)
 print("--- %s seconds --- V4" % ((time.time_ns() - start_time) / 10**9 ))
 
 if detect_reccurenceV2(database) == detect_reccurenceV3(database) == detect_reccurenceV4(database) :
     print("They all agreed on the response")
 else :
-    print("At least une function didn't send the same result than the others")
+    print("At least one function didn't send the same result than the others")
+
+print(detect_reccurenceV2(database))
