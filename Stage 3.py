@@ -503,6 +503,7 @@ main_database = [[38502761,"LunarTransport",68362850,"Lunestone",33813.87],
 
 import numpy as np
 import pandas as pd
+from sympy import maximum
 
 csv = pd.DataFrame(main_database, columns=['Seller_ID','Seller_CO','Buyer_ID','Buyer_CO','Tran_PR'])
 
@@ -514,7 +515,13 @@ def deep_path(summit, visited, adg_list, pile) :
     return pile + [summit]
 
 
-def find_main_fraudster(csv):
+def group_by_sum(indexs, data, index_sum) :
+    unique = np.unique(data[:,indexs], axis=0)
+    sums = np.fromiter((np.sum(np.asarray(data[:,index_sum], dtype =float), where=np.all(data[:,indexs] == line, axis = 1)) for line in unique), dtype = float, count = len(unique))
+    return np.concatenate((unique, np.resize(sums, (len(sums), 1))), axis =1)
+
+
+def find_main_fraudsterV1(csv):
     
     #main_database = pd.read_csv(csv)
     
@@ -576,4 +583,138 @@ def find_main_fraudster(csv):
     # the highest amount of money while being connected to the highest number of companies.
     return int(index_to_id[richest_index])
 
-print(find_main_fraudster(csv))
+
+def find_main_fraudsterV2(csv):
+    
+    #main_database = pd.read_csv(csv)
+    
+    # CODE HERE
+    main_database = np.asarray(csv.to_numpy()[:,[2,0,4]], dtype = float)
+    main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
+    group_by = group_by_sum([0,1],main_database_cleaned,-1)
+
+    id_to_index = {group_by[0][0] : 0}
+    index_to_id = [group_by[0][0]]
+    money_of_index = [group_by[0][2]]
+    group_by[0][0] = 0
+    nb_of_ids = 1
+    for i in range(1, len(group_by)) :
+        if group_by[i][0] not in id_to_index :
+            id_to_index[group_by[i][0]] = nb_of_ids
+            index_to_id.append(group_by[i][0])
+            money_of_index.append(group_by[i][2])
+            group_by[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            money_of_index[id_to_index[group_by[i][0]]] += group_by[i][2]
+            group_by[i][0] = id_to_index[group_by[i][0]]
+
+
+    adg_list = [[] for i in range(nb_of_ids)]
+    for i in range(len(group_by)) :
+        adg_list[int(group_by[i][0])].append(id_to_index[group_by[i][1]])
+
+
+    visited = [False] * nb_of_ids
+    pile = []
+    for i in range(len(visited)) :
+        if not visited[i] :
+            pile.append(deep_path(i, visited, adg_list, []))
+
+
+    connexe_size = 0
+    longest_connext = []
+    for connexe in pile :
+        if len(connexe) >= connexe_size :
+            longest_connext = connexe
+            connexe_size = len(connexe)
+
+    money = -1
+    richest_index = -1
+    for index in longest_connext :
+        if money_of_index[index] >= money :
+            richest_index = index
+            money = money_of_index[index]
+
+    #print(unique)
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return int(index_to_id[richest_index])
+
+
+def find_main_fraudsterV3(csv):
+    
+    #main_database = pd.read_csv(csv)
+    
+    # CODE HERE
+    main_database = np.asarray(csv.to_numpy()[:,[2,0,4]], dtype = float)
+    main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
+    group_by = group_by_sum([0,1],main_database_cleaned,-1)
+
+    id_to_index = {group_by[0][0] : 0}
+    index_to_id = [group_by[0][0]]
+    group_by[0][0] = 0
+    nb_of_ids = 1
+    for i in range(1, len(group_by)) :
+        if group_by[i][0] not in id_to_index :
+            id_to_index[group_by[i][0]] = nb_of_ids
+            index_to_id.append(group_by[i][0])
+            group_by[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            group_by[i][0] = id_to_index[group_by[i][0]]
+
+
+    adg_list = [[] for i in range(nb_of_ids)]
+    for i in range(len(group_by)) :
+        adg_list[int(group_by[i][0])].append(id_to_index[group_by[i][1]])
+
+
+    visited = [False] * nb_of_ids
+    pile = []
+    for i in range(len(visited)) :
+        if not visited[i] :
+            pile.append(deep_path(i, visited, adg_list, []))
+
+    connexe_size = 0
+    longest_connext = []
+    for connexe in pile :
+        if len(connexe) >= connexe_size :
+            longest_connext = connexe
+            connexe_size = len(connexe)
+
+    money_by_index = group_by_sum([0], group_by, -1)
+
+    max_money = -1
+    richest_index = -1
+    for index in longest_connext :
+        if money_by_index[index][1] >= max_money :
+            richest_index = index
+            max_money = money_by_index[index][1]
+    
+    #print(unique)
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return int(index_to_id[richest_index])
+
+
+import time
+
+nb_of_iter = 1000
+print("Pour : " + str(nb_of_iter) + " itérations")
+start_time = time.time_ns()
+for i in range(nb_of_iter) :
+    find_main_fraudsterV1(csv)
+print("V1 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
+
+start_time = time.time_ns()
+for i in range(nb_of_iter) :
+    find_main_fraudsterV2(csv)
+print("V2 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
+
+start_time = time.time_ns()
+for i in range(nb_of_iter) :
+    find_main_fraudsterV3(csv)
+print("V3 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
