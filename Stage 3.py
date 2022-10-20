@@ -708,14 +708,13 @@ def find_main_fraudsterV4(csv):
     #On récupère uniquement les ids et les montants des transactions, + on inverse les colonnes acheteurs / vendeurs
     main_database = np.asarray(csv.to_numpy()[:,[2,0,4]], dtype = float)
 
-    #On enlèves les lignes inutiles. ie : les transactions ou l'acheteur est le même que le vendeur
+    #Suppresion les lignes inutiles. ie : les transactions ou l'acheteur est le même que le vendeur
     main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
 
-    #On réunie les lignes ou l'acheteur et le vendeur sont les même et on fait la somme des montants des transactions
+    #Réunion les lignes ou l'acheteur et le vendeur sont les même et on fait la somme des montants des transactions
     group_by = group_by_sum([0,1],main_database_cleaned,-1)
 
-
-    #on crée une bijection entre les ids des entreprises et les indexs d'un tableau tout en réalisant la somme des montants reçu pour chaque entreprise
+    #Création une bijection entre les ids des entreprises et les indexs d'un tableau tout en réalisant la somme des montants reçu pour chaque entreprise
     id_to_index = {group_by[0][0] : 0}
     index_to_id = [group_by[0][0]]
     money_of_index = [group_by[0][2]]
@@ -735,31 +734,28 @@ def find_main_fraudsterV4(csv):
     for i in range(0, len(group_by)) :
         group_by[i][1] = id_to_index[group_by[i][1]]
 
-    to_create_adg_list = np.concatenate((group_by[:,[0,1]], group_by[:,[1,0]]))
-    to_create_adg_list = np.asarray(np.unique(to_create_adg_list, axis =0), dtype = int)
-
-    #On crée la liste d'adgacence du graph
-    adg_list = [[] for i in range(nb_of_ids)]
+    #Création de la liste d'adjacence du graph
+    to_create_adg_list = np.concatenate((group_by[:,[0,1]], group_by[:,[1,0]])) #Désorientation des arrêtes
+    to_create_adg_list = np.asarray(np.unique(to_create_adg_list, axis =0), dtype = int) #Mise en forme du tableau
+    
+    adg_list = [[] for i in range(nb_of_ids)] #formation de la liste
     for i in range(len(to_create_adg_list)) :
         adg_list[to_create_adg_list[i][0]].append(to_create_adg_list[i][1])
 
-
     #Parcours du graph en profondeur, pour récupérer les composantes connexes
     visited = [False] * nb_of_ids
-    pile = []
+    connexes = [] #Liste des composantes connexes
     for i in range(len(visited)) :
         if not visited[i] :
-            pile.append(deep_path(i, visited, adg_list, []))
-
+            connexes.append(deep_path(i, visited, adg_list, []))
 
     #Détermination de la composante connexe de plus grande taille
     connexe_size = 0
     longest_connext = []
-    for connexe in pile :
+    for connexe in connexes :
         if len(connexe) >= connexe_size :
             longest_connext = connexe
             connexe_size = len(connexe)
-
 
     #Détermination de l'entreprise la plus riche parmis la plus grande composante connexe
     money = -1
@@ -768,8 +764,6 @@ def find_main_fraudsterV4(csv):
         if money_of_index[index] >= money :
             richest_index = index
             money = money_of_index[index]
-
-    #print(unique)
     
     # The function should return the company ID belonging to the company which received 
     # the highest amount of money while being connected to the highest number of companies.
@@ -777,7 +771,7 @@ def find_main_fraudsterV4(csv):
 
 import time
 
-nb_of_iter = 1
+nb_of_iter = 1000
 print("Pour : " + str(nb_of_iter) + " itérations")
 start_time = time.time_ns()
 for i in range(nb_of_iter) :
