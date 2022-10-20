@@ -699,10 +699,85 @@ def find_main_fraudsterV3(csv):
     # the highest amount of money while being connected to the highest number of companies.
     return int(index_to_id[richest_index])
 
+def find_main_fraudsterV4(csv):
+    
+    #main_database = pd.read_csv(csv)
+    
+    # CODE HERE
+
+    #On récupère uniquement les ids et les montants des transactions, + on inverse les colonnes acheteurs / vendeurs
+    main_database = np.asarray(csv.to_numpy()[:,[2,0,4]], dtype = float)
+
+    #On enlèves les lignes inutiles. ie : les transactions ou l'acheteur est le même que le vendeur
+    main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
+
+    #On réunie les lignes ou l'acheteur et le vendeur sont les même et on fait la somme des montants des transactions
+    group_by = group_by_sum([0,1],main_database_cleaned,-1)
+
+
+    #on crée une bijection entre les ids des entreprises et les indexs d'un tableau tout en réalisant la somme des montants reçu pour chaque entreprise
+    id_to_index = {group_by[0][0] : 0}
+    index_to_id = [group_by[0][0]]
+    money_of_index = [group_by[0][2]]
+    group_by[0][0] = 0
+    nb_of_ids = 1
+    for i in range(1, len(group_by)) :
+        if group_by[i][0] not in id_to_index :
+            id_to_index[group_by[i][0]] = nb_of_ids
+            index_to_id.append(group_by[i][0])
+            money_of_index.append(group_by[i][2])
+            group_by[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            money_of_index[id_to_index[group_by[i][0]]] += group_by[i][2]
+            group_by[i][0] = id_to_index[group_by[i][0]]
+    
+    for i in range(0, len(group_by)) :
+        group_by[i][1] = id_to_index[group_by[i][1]]
+
+    to_create_adg_list = np.concatenate((group_by[:,[0,1]], group_by[:,[1,0]]))
+    to_create_adg_list = np.asarray(np.unique(to_create_adg_list, axis =0), dtype = int)
+
+    #On crée la liste d'adgacence du graph
+    adg_list = [[] for i in range(nb_of_ids)]
+    for i in range(len(to_create_adg_list)) :
+        adg_list[to_create_adg_list[i][0]].append(to_create_adg_list[i][1])
+
+
+    #Parcours du graph en profondeur, pour récupérer les composantes connexes
+    visited = [False] * nb_of_ids
+    pile = []
+    for i in range(len(visited)) :
+        if not visited[i] :
+            pile.append(deep_path(i, visited, adg_list, []))
+
+
+    #Détermination de la composante connexe de plus grande taille
+    connexe_size = 0
+    longest_connext = []
+    for connexe in pile :
+        if len(connexe) >= connexe_size :
+            longest_connext = connexe
+            connexe_size = len(connexe)
+
+
+    #Détermination de l'entreprise la plus riche parmis la plus grande composante connexe
+    money = -1
+    richest_index = -1
+    for index in longest_connext :
+        if money_of_index[index] >= money :
+            richest_index = index
+            money = money_of_index[index]
+
+    #print(unique)
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return int(index_to_id[richest_index])
 
 import time
 
-nb_of_iter = 1000
+nb_of_iter = 1
 print("Pour : " + str(nb_of_iter) + " itérations")
 start_time = time.time_ns()
 for i in range(nb_of_iter) :
@@ -718,3 +793,15 @@ start_time = time.time_ns()
 for i in range(nb_of_iter) :
     find_main_fraudsterV3(csv)
 print("V3 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
+
+start_time = time.time_ns()
+for i in range(nb_of_iter) :
+    find_main_fraudsterV4(csv)
+print("V4 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
+
+if find_main_fraudsterV1(csv) == find_main_fraudsterV2(csv) == find_main_fraudsterV3(csv) == find_main_fraudsterV4(csv) :
+    print("\nevery body agreed on id : " + str(find_main_fraudsterV1(csv)))
+else :
+    print("There are diffrents responses")
+
+
