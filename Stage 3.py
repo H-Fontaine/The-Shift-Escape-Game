@@ -513,6 +513,13 @@ def deep_path(summit, visited, adg_list, pile) :
             pile = deep_path(i, visited, adg_list, pile)
     return pile + [summit]
 
+def deep_first(summit, visited, adg_matrix, connexe) :
+    visited[summit] = True
+    for i in range(len(adg_matrix[summit])) :
+        if not visited[i] and adg_matrix[summit][i] :
+            connexe = deep_first(i, visited, adg_matrix, connexe)
+    return connexe + [summit]
+
 def group_by_sum(indexs, data, index_sum) :
     unique = np.unique(data[:,indexs], axis=0)
     sums = np.fromiter((np.sum(np.asarray(data[:,index_sum], dtype =float), where=np.all(data[:,indexs] == line, axis = 1)) for line in unique), dtype = float, count = len(unique))
@@ -916,27 +923,62 @@ def find_main_fraudsterV6(csv):
     # the highest amount of money while being connected to the highest number of companies.
     return index_to_id[richest_index]
 
+import math
+
 def find_main_fraudsterV7(csv) : #groupby by pandas
     #database = pd.read_csv(csv)
     database = csv
 
     # CODE HERE
 
-    #On ne prend pas en compte les transaction des succures salles
+    #On ne prend pas en compte les transactions des succursales
     database.loc[database['Seller_CO'] == database['Buyer_CO'], 'Tran_PR'] = 0
-
-    #Création d'une demi matrice d'adjacence
-    database_grouped = database.groupby(['Seller_ID','Buyer_ID'])['Tran_PR'].sum().unstack(level='Buyer_ID').to_numpy(dtype = float)
-    
-    money_receved = np.nansum(database_grouped, axis = 0)
-    print(money_receved)
-
 
     #Bijection index & ids
     index_to_ids = np.unique(np.concatenate((database['Seller_ID'].to_numpy(), database['Buyer_ID'].to_numpy())))
+
+    #Création d'une demi matrice d'adjacence
+    adj_matrix = database.groupby(['Seller_ID','Buyer_ID'])['Tran_PR'].sum().unstack(level='Buyer_ID').to_numpy(dtype = float)
     
-    print(database_grouped)
+    #Calcul de l'argent reçu par chaque entreprise
+    money_received = np.nansum(adj_matrix, axis = 1)
+
+    #Symétrisation de la matrice
+    for i in range(len(adj_matrix)) :
+        for j in range(len(adj_matrix)) :
+            if not math.isnan(adj_matrix[i][j]) :
+                    adj_matrix[i][j] = 1
+                    adj_matrix[j][i] = 1
+            else :
+                adj_matrix[i][j] = 0
     
+    #Détermination des composantes connexes
+    visited = [False] * len(index_to_ids)
+    connexes = []
+    for i in range(len(adj_matrix)) :
+        if not visited[i] :
+            connexes.append(deep_first(i, visited, adj_matrix, []))
+    
+    #Détermination de la plus grande partie connexe
+    longest_connex = connexes[0]
+    connexe_lenght = len(connexes[0])
+    for i in range(1, len(connexes)) :
+        if len(connexes[i]) > connexe_lenght :
+            longest_connex = connexes[i]
+            connexe_lenght = len(connexes[i])
+
+    #Détermination de la compagnie qui a reçut le plus d'argent dans la plus grande partie connexe
+    richest_index = longest_connex[0]
+    index_money = money_received[0]
+    for i in range(1, len(longest_connex)) :
+        if money_received[longest_connex[i]] > index_money :
+            richest_index = longest_connex[i]
+            index_money = money_received[longest_connex[i]]
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return index_to_ids[richest_index]
+
 
 import time
 
@@ -969,4 +1011,9 @@ else :
     print("There are diffrents responses")
 """
 
-print(find_main_fraudsterV7(csv))
+nb_of_iter = 1000
+print("Pour : " + str(nb_of_iter) + " itérations")
+start_time = time.time_ns()
+for i in range(nb_of_iter) :
+    find_main_fraudsterV7(csv)
+print("V7 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
