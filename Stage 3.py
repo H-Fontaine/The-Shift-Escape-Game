@@ -698,6 +698,7 @@ def find_main_fraudsterV3(csv):
     # the highest amount of money while being connected to the highest number of companies.
     return int(index_to_id[richest_index])
 
+
 def find_main_fraudsterV4(csv):
     
     #main_database = pd.read_csv(csv)
@@ -846,7 +847,6 @@ def find_main_fraudsterV5(csv):
     return int(index_to_id[richest_index])
 
 
-
 def find_main_fraudsterV6(csv):
     
     #main_database = pd.read_csv(csv)
@@ -923,6 +923,95 @@ def find_main_fraudsterV6(csv):
     # the highest amount of money while being connected to the highest number of companies.
     return index_to_id[richest_index]
 
+
+
+    
+    #main_database = pd.read_csv(csv)
+    
+    # CODE HERE
+
+    #On récupère uniquement les ids et les montants des transactions
+    main_database = np.asarray(csv.to_numpy(dtype = str)[:,[1,3,4]])
+    
+    #Suppresion les lignes inutiles. ie : les transactions ou l'acheteur est le même que le vendeur
+    main_database_cleaned = main_database[main_database[:,0] != main_database[:,1]]
+    
+    #Réunion les lignes ou l'acheteur et le vendeur sont les même et on fait la somme des montants des transactions
+    group_by = group_by_sum([0,1],main_database_cleaned,-1)
+
+    #Création une bijection entre les ids des entreprises et les indexs d'un tableau tout en réalisant la somme des montants reçu pour chaque entreprise
+    id_to_index = {group_by[0][0] : 0}
+    index_to_id = [group_by[0][0]]
+    #money_of_index = [float(group_by[0][2])]
+    group_by[0][0] = 0
+    nb_of_ids = 1
+    for i in range(1, len(group_by)) :
+        if group_by[i][0] not in id_to_index :
+            id_to_index[group_by[i][0]] = nb_of_ids
+            index_to_id.append(group_by[i][0])
+            #money_of_index.append(float(group_by[i][2]))
+            group_by[i][0] = nb_of_ids
+            nb_of_ids += 1
+        else :
+            #money_of_index[id_to_index[group_by[i][0]]] += float(group_by[i][2])
+            group_by[i][0] = id_to_index[group_by[i][0]]
+    
+    money_of_index = [0] * nb_of_ids
+    for i in range(0, len(group_by)) :
+        group_by[i][1] = id_to_index[group_by[i][1]]
+        money_of_index[int(group_by[i][0])] += float(group_by[i][2])
+        money_of_index[int(group_by[i][1])] -= float(group_by[i][2])
+    
+    print(money_of_index)
+
+    #Création de la liste d'adjacence du graph
+    to_create_adg_list = np.concatenate((group_by[:,[0,1]], group_by[:,[1,0]])) #Désorientation des arrêtes
+    to_create_adg_list = np.asarray(np.unique(to_create_adg_list, axis =0), dtype = int) #Mise en forme du tableau
+    
+    adg_list = [[] for i in range(nb_of_ids)] #formation de la liste
+    for i in range(len(to_create_adg_list)) :
+        adg_list[to_create_adg_list[i][0]].append(to_create_adg_list[i][1])
+
+    #Parcours du graph en profondeur, pour récupérer les composantes connexes
+    visited = [False] * nb_of_ids
+    connexes = [] #Liste des composantes connexes
+    for i in range(len(visited)) :
+        if not visited[i] :
+            connexes.append(deep_path(i, visited, adg_list, []))
+    print(connexes)
+
+    #Détermination de la composante connexe de plus grande taille
+    connexe_size = 0
+    longest_connext = []
+    for connexe in connexes :
+        if len(connexe) >= connexe_size :
+            longest_connext = connexe
+            connexe_size = len(connexe)
+
+    #Détermination de l'entreprise la plus riche parmis la plus grande composante connexe
+    money = longest_connext[0]
+    richest_index = 0
+    for i in range(len(longest_connext)) :
+        if money_of_index[longest_connext[i]] >= money :
+            richest_index = longest_connext[i]
+            money = money_of_index[longest_connext[i]]
+    
+    # The function should return the company ID belonging to the company which received 
+    # the highest amount of money while being connected to the highest number of companies.
+    return index_to_id[richest_index]
+
+def find_main_fraudsterV7(csv) : #groupby by pandas
+    #database = pd.read_csv(csv)
+    database = csv
+
+    # CODE HERE
+
+    database_grouped = database.groupby(['Seller_ID','Buyer_ID'])['Tran_PR'].sum().unstack(level='Buyer_ID')
+    print(database_grouped.to_numpy())
+    
+
+    #candidates_month_languages = candidates_df.groupby(['language','month']).agg(num_cand_month = ('num_candidates', 'sum'), avg_sal = ('salary', 'mean'))
+
 import time
 
 """
@@ -954,4 +1043,4 @@ else :
     print("There are diffrents responses")
 """
 
-print(find_main_fraudsterV6(csv))
+print(find_main_fraudsterV7(csv))
