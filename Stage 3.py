@@ -934,16 +934,18 @@ def find_main_fraudsterV7(csv) : #groupby by pandas
     #On ne prend pas en compte les transactions des succursales
     database.loc[database['Seller_CO'] == database['Buyer_CO'], 'Tran_PR'] = 0
 
-    #Bijection index & ids
+    #Bijection index & ids (à noter que unique tri les id par ordre croissants nous utiliserons cette propriété par la suite)
+    
     index_to_ids = np.unique(np.concatenate((database['Seller_ID'].to_numpy(), database['Buyer_ID'].to_numpy())))
 
+
     #Création d'une demi matrice d'adjacence
-    adj_matrix = database.groupby(['Seller_ID','Buyer_ID'])['Tran_PR'].sum().unstack(level='Buyer_ID').to_numpy(dtype = float)
+    adj_matrix = database.groupby(['Seller_ID','Buyer_ID'])['Tran_PR'].sum().unstack(level='Buyer_ID').to_numpy(dtype = float)#unstack fait des collonnes de buyer id en inscrivant Nan si le buyer n'a pas acheter au seller correspondant à la ligne et la somme sinon. (les indices sont numéroter par ordre croissants on va donc pouvoir utiliser buyer_to_id)
     
     #Calcul de l'argent reçu par chaque entreprise
-    money_received = np.nansum(adj_matrix, axis = 1)
+    money_received = np.nansum(adj_matrix, axis = 1) #par construction l'argent reçu par un seller est la somme d'une ligne
 
-    #Symétrisation de la matrice
+    #Symétrisation de la matrice (utile pour explorer le réseau que l'on considérer comme un graphe non orienté)
     for i in range(len(adj_matrix)) :
         for j in range(len(adj_matrix)) :
             if not math.isnan(adj_matrix[i][j]) :
@@ -952,7 +954,7 @@ def find_main_fraudsterV7(csv) : #groupby by pandas
             else :
                 adj_matrix[i][j] = 0
     
-    #Détermination des composantes connexes
+    #Détermination des composantes connexes (utilisation d'un DFS)
     visited = [False] * len(index_to_ids)
     connexes = []
     for i in range(len(adj_matrix)) :
@@ -979,7 +981,7 @@ def find_main_fraudsterV7(csv) : #groupby by pandas
     # the highest amount of money while being connected to the highest number of companies.
     return index_to_ids[richest_index]
 
-
+find_main_fraudsterV7(csv)
 import time
 
 """
@@ -1010,10 +1012,3 @@ if find_main_fraudsterV1(csv) == find_main_fraudsterV2(csv) == find_main_fraudst
 else :
     print("There are diffrents responses")
 """
-
-nb_of_iter = 1000
-print("Pour : " + str(nb_of_iter) + " itérations")
-start_time = time.time_ns()
-for i in range(nb_of_iter) :
-    find_main_fraudsterV7(csv)
-print("V7 : %s seconds " % ((time.time_ns() - start_time) / 10**9 ))
