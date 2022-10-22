@@ -14,10 +14,13 @@ def overwrite_sequence(input):
         liste.append(2*liste[-1] - liste[-2] + 2)
         i+=1
 
-    i = int(str(i)[::-1])
     res = [i]
+    for i in range(1, len(input)) :
+        res.append(res[-1] + 1)
 
-    for i in range(len(input) - 1) :
-        res.append(res[-1] + 10)
+    for i in range(len(input)) :
+        res[i] = int(str(res[i])[::-1])
     
     return res
+
+print(overwrite_sequence(input))
