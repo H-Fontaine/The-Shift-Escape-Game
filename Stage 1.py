@@ -504,37 +504,7 @@ import pandas as pd
 data = np.array(data)
 dataframe = pd.DataFrame(data, columns=['Cust_ID','Cust_FN','Cust_LN','Cust_AD','Cust_EM','Send_ID','Send_EM','Send_CO','Tran_DA','Tran_QU','Tran_PR'])
 
-def find_fraudsterV1(database):
-
-  #database = pd.read_csv(csv_file)
-  
-  # CODE HERE
-  
-  #Getting all customers living in Norway thanks to ", "
-  cust_Norway = database[database['Cust_AD'].str.contains(", Norway")]
-  
-  #From the previously selected customers we get those with the domaine name "hotmail"
-  cust_Norway_hotmail = cust_Norway[cust_Norway['Cust_EM'].str.contains("@hotmail")]
-
-  #parsing and refactoring date format for easier traitment
-  cust_Norway_hotmail['Tran_DA'] = pd.to_datetime(cust_Norway_hotmail['Tran_DA'], infer_datetime_format = True)
-
-  #Creating dates to compare transaction date with 
-  first_day_may = pd.to_datetime("2250-05-01")
-  last_day_june = pd.to_datetime("2250-06-30")
-
-  #From the previously selected customers we get those that made transaction between the two previously defined date
-  cust_Norway_hotmail_date = cust_Norway_hotmail[cust_Norway_hotmail['Tran_DA'] >= first_day_may]
-  cust_Norway_hotmail_date = cust_Norway_hotmail_date[cust_Norway_hotmail_date['Tran_DA'] <= last_day_june]
-
-  #Getting the Cust_ID of lasting customer
-  suspicious_id= cust_Norway_hotmail_date.iloc[0][0]
-
-  # The function should return the Cust_ID from the transaction which satisfies the given constraints as an integer
-  return(suspicious_id)
-
-
-def find_fraudsterV2(database):
+def find_fraudster(database):
 
   #database = pd.read_csv(csv_file)
   
@@ -554,37 +524,3 @@ def find_fraudsterV2(database):
 
   # The function should return the Cust_ID from the transaction which satisfies the given constraints as an integer
   return(suspicious_id)
-
-def find_fraudsterV3(database):
-
-  #database = pd.read_csv(csv_file)
-  
-  # CODE HERE
-  database = database[['Cust_ID','Cust_AD', 'Cust_EM', 'Tran_DA']]
-
-  #Getting all customers living in Norway thanks to ", "
-  cust_Norway = database[database['Cust_AD'].str.contains(", Norway")]
-  
-  #From the previously selected customers we get those with the domaine name "hotmail"
-  cust_Norway_hotmail = cust_Norway[cust_Norway['Cust_EM'].str.contains("@hotmail")]
-
-  #From the previously selected customers we get those that made a transaction between the two provided dates
-  cust_Norway_hotmail_date = cust_Norway_hotmail[cust_Norway_hotmail['Tran_DA'].str.contains('5/2250|6/2250')]
-
-  #Getting the Cust_ID of lasting customer
-  suspicious_id= cust_Norway_hotmail_date.iloc[0][0]
-
-  # The function should return the Cust_ID from the transaction which satisfies the given constraints as an integer
-  return(suspicious_id)
-
-import time
-
-t = time.time() 
-print(find_fraudsterV1(dataframe))
-print("t1 = " + str((time.time() - t)*1000))
-t = time.time()
-print(find_fraudsterV2(dataframe))
-print("t2 = " + str((time.time() - t)*1000))
-t = time.time()
-print(find_fraudsterV3(dataframe))
-print("t3 = " + str((time.time() - t)*1000))

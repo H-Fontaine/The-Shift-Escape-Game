@@ -1,6 +1,3 @@
-import numpy as np
-import pandas as pd
-
 input = [441, 484, 529, 576, 625]
 output = [12, 22, 32, 42, 52]
 
@@ -22,5 +19,3 @@ def overwrite_sequence(input):
         res[i] = int(str(res[i])[::-1])
     
     return res
-
-print(overwrite_sequence(input))

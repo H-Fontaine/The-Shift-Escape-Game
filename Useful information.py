@@ -1,5 +1,3 @@
-import numpy as np
-
 All_packages = ['asgiref==3.5.2',
                 'django==3.2.13',
                 'future==0.18.2',
@@ -15,7 +13,9 @@ All_packages = ['asgiref==3.5.2',
                 'sqlparse==0.4.2',
                 'wheel==0.34.2']
 
-main_database = []
-database = main_database.to_numpy()
+import numpy as np
+
+csv = []
+database = csv.to_numpy()
 np.set_printoptions(threshold=np.inf)
 print(database)
